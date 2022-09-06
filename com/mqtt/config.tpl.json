@@ -1,0 +1,12 @@
+{
+	// mqtt请求路由地址
+	"target": "{1}",
+	// 名称
+	"name": "{0}",
+	// mqtt标题
+	"title": "示例订阅",
+	// 描述，用来介绍该mqtt程序是做什么用的
+	"description": "用来测试",
+	// mqtt调用的脚本文件
+	"func_file": "./index.js"
+}

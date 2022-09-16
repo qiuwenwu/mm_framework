@@ -1,4 +1,5 @@
 const Index = require('mm_machine').Index;
+const MQTT_client = require('../../core/mqtt');
 const Drive = require('./drive');
 
 /**
@@ -19,23 +20,63 @@ class MQTT extends Index {
 		this.type = "mqtt";
 		this.dict = {};
 		this.title = title;
+
+		this.config = {
+			host: "127.0.0.1",
+			port: "1883",
+			protocol: "mqtt",
+			clientId: "test123",
+			username: "admin",
+			password: "asd123",
+			clean: false
+		}
+		this.client = null;
 	}
 }
 
 /**
- * 处理mqtt请求
- * @param {Object} ctx 请求上下文
- * @param {Function} next 跳过当前, 然后继续执行函数
+ * 主题匹配
+ * @param {String} topic 接收到的主题
+ * @param {String} top 匹配用的主题
+ * @@return {Boolean} 返回匹配结果，正确返回true，错误返回false
  */
-MQTT.prototype.run = async function(ctx, next) {
-	await next();
-	var list = this.list;
-	const path = ctx.path.toLocaleLowerCase();
-	for (var i = 0, o; o = list[i++];) {
-		if (path === o.config.path) {
-			o.add(ctx);
-			break;
+MQTT.prototype.match = function(topic, top) {
+	if (topic === top) {
+		return true;
+	}
+	var str = "^" + top.replace("#", ".*").replace("+", "~~~").replace("~~~", "[a-zA-Z0-9_]+").replace("$", "~~~")
+		.replace("~~~", "\\$");
+	var s = str.substring(str.length - 1, str.length);
+	if (s !== "#") {
+		str += "$";
+	}
+	var mh = new RegExp(str);
+	return mh.test(topic);
+}
+
+/**
+ * 初始化
+ */
+MQTT.prototype.init_after = function() {
+	this.client.on("message", (topic, msg) => {
+		var db = $.sql.db();
+		var list = this.list;
+		for (var i = 0, o; o = list[i++];) {
+			if (this.match(topic, o.config.topic)) {
+				o.run(topic, msg);
+			}
 		}
+	});
+}
+
+/**
+ * 处理mqtt请求
+ * @param {Object} conn 通讯连接器
+ */
+MQTT.prototype.run = async function(conn) {
+	var list = this.list;
+	for (var i = 0, o; o = list[i++];) {
+		client.subscribe(o.config.topic);
 	}
 };
 

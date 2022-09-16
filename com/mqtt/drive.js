@@ -24,23 +24,18 @@ class Drive extends Item {
 			"name": "",
 			// 状态 0未启用，1启用
 			"state": 1,
-			// 匹配的路径
-			"path": "",
+			// 订阅的主题
+			"topic": "",
 			// mqtt 服务标题
 			"title": "",
 			// mqtt 服务介绍
 			"description": "",
 			// 调用的脚本
-			"func_file": "./index.js",
-			// 同步消息循环发送的时间间隔
-			"interval": 1000
+			"func_file": "./index.js"
 		};
 
 		// 开放给前端调用的函数
 		this.methods = Object.assign({}, $.methods);
-
-		// 客户端集合
-		this.clients = {};
 	}
 }
 
@@ -64,6 +59,33 @@ Drive.prototype.new_script = function(file) {
 };
 
 /**
+ * 配置示例
+ * @param {String} 文件
+ */
+Drive.prototype.model = function() {
+	// 单层匹配订阅,用于订阅所有客户端要接收的数据  格式：$SYS/<代理服务器>/service/业务/+
+	// "topic": "$SYS/mm/service/user/+"
+	// 通配方式订阅,用于订阅仅该设备或该客户端要订阅的数据  格式：$SYS/<代理服务器>/service/appid/#
+	// "topic": "$SYS/mm/service/idd6877e1561/#"
+	// 完全匹配订阅，用于特定的业务订阅，业务压力最小，建议尽可能使用完全匹配
+	// "topic": "$SYS/mm/service/state"
+	return {
+		// 名称, 由中英文和下“_”组成, 用于修改或卸载 例如: demo
+		"name": "demo",
+		// 状态 0未启用，1启用
+		"state": 1,
+		// 订阅的主题
+		"topic": "$SYS/mm/service/user/state",
+		// mqtt 服务标题
+		"title": "用户状态",
+		// mqtt 服务介绍
+		"description": "用于用户登录状态改变时，如1登录、2隐身、3高调、4离线",
+		// 调用的脚本
+		"func_file": "./index.js"
+	}
+}
+
+/**
  * 新建配置
  * @param {String} 文件
  */
@@ -83,265 +105,20 @@ Drive.prototype.new_config = function(file) {
 };
 
 /**
- * 获取session ID
- * @param {Object} ctx HTTP上下文
- * @return {String} 返回用户的uuid
+ * 发送消息 —— 会发送给所有目标
+ * @param {String} topic 推送的主题
+ * @param {Object} msg 消息正文
  */
-Drive.prototype.getToken = async function(ctx) {
-	var uuid = await ctx.cookies.get("mm:uuid");
-	if (!uuid) {
-		var hd = ctx.request.header;
-		var agent = hd['user-agent'];
-		if (!agent) {
-			agent = "mm";
-		}
-		var start = agent.md5().substring(0, 32);
-		var stamp = Date.parse(new Date()) / 1000;
-		uuid = (ctx.ip + '_' + stamp).aes_encode(start);
-	}
-	return uuid;
+Drive.prototype.send = async function(topic, msg) {
+
 };
 
 /**
- * 收到消息时处理函数
- * @param {String} bodyStr 消息正文字符串
- * @param {Object} ctx http上下文
- * @param {String} token 临时访问牌
+ * 接收订阅消息
+ * @param {String} topic 推送的主题
+ * @param {Object} msg 消息正文
  */
-Drive.prototype.onmessage = async function(bodyStr, ctx, token) {
-	var ret = await this.run(bodyStr, ctx, token);
-	if (ret) {
-		var ws = ctx.mqtt;
-		if (typeof(ret) === "object") {
-			ws.send(JSON.stringify(ret));
-		} else {
-			ws.send(ret);
-		}
-	}
-};
-
-/**
- * 状态变更通知
- * @param {String} type 通知类型
- * @param {String} bodyStr 消息正文字符串
- * @param {Object} ctx http上下文
- * @param {String} token 临时访问牌
- * @return {Boolean} 返回true表示做状态修改, 例如关闭时为true, 会删除该客户端
- */
-Drive.prototype.noticy = async function(type, bodyStr, ctx, token) {
-	// $.log.debug('通知:', '关闭了');
-	return true;
-};
-
-/**
- * 关闭连接时处理函数
- * @param {String} bodyStr 消息正文字符串
- * @param {Object} ctx http上下文
- * @param {String} token 临时访问牌
- */
-Drive.prototype.onclose = async function(bodyStr, ctx, token) {
-	var del = await this.noticy("close", ctx, token);
-	if (del) {
-		var lt = this.clients[token];
-		var index = lt.indexOf(ctx);
-		lt.splice(index, 1);
-	}
-};
-
-/**
- * 设置mqtt
- * @param {Object} ctx http上下文
- * @param {String} token 临时访问牌
- */
-Drive.prototype.set_mqtt = function(ctx, token) {
-	var ws = ctx.mqtt;
-
-	// 增加消息队列
-	ws.list_msg = [];
-
-	/**
-	 * 设置发送请求
-	 * @param {String} method 方法名称
-	 * @param {Object} params 请求参数
-	 * @param {Function} func 回调函数
-	 */
-	var _this = this;
-	ws.req = async function(method, params, func) {
-		var key = _this.config.name + '';
-		var data = {
-			id: key + new Date().getTime() + Math.random(),
-			method: method,
-			params: params
-		};
-		this.send(JSON.stringify(data));
-
-		if (func) {
-			data.func = func;
-			this.list_msg.push(data);
-		}
-	};
-
-	// 设置事件 —— 获取消息时和mqtt关闭时
-	ws.on("message", async function(bodyStr) {
-		_this.onmessage(bodyStr, ctx, token)
-	});
-
-	ws.on("close", async function(bodyStr) {
-		_this.onclose(bodyStr, ctx, token)
-	});
-}
-
-
-/**
- * 握手成功, 发送首条返回内容
- * @param {Object} ctx http 上下文
- * @param {String} token 临时访问牌
- */
-Drive.prototype.success = function(ctx, token) {
-	var ret = $.ret.bl(true, 'connection succeeded');
-	// 首次响应加上身份牌
-	ret.result.token = token;
-	// ID为0表示连接成功
-	ret.id = 0;
-	ctx.mqtt.send(JSON.stringify(ret));
-};
-
-/**
- * 添加客户端
- * @param {Object} ctx 请求上下文
- * @param {Function} next 跳过当前, 然后继续执行函数
- */
-Drive.prototype.add = async function(ctx) {
-	var token = await this.getToken(ctx);
-	if (!this.clients[token]) {
-		this.clients[token] = [];
-	}
-	this.set_mqtt(ctx, token);
-	this.success(ctx, token);
-	this.clients[token].push(ctx);
-};
-
-/**
- * 发送消息 —— 会发送给所有目标, 如须过滤目标, 则须在渲染时过滤
- * @param {String} body 消息正文
- * @param {String} token 临时访问牌, 用于指定客户端发消息
- */
-Drive.prototype.send = async function(body, token) {
-	if (token) {
-		var list = this.clients[token];
-		if (list) {
-			list.map(async (ctx) => {
-				ctx.mqtt.send(body);
-			})
-		}
-	} else {
-		var dt = this.clients;
-		for (let k in dt) {
-			var list = dt[k];
-			list.map(async (ctx) => {
-				ctx.mqtt.send(body);
-			});
-		}
-	}
-};
-
-/**
- * 发送消息 —— 会发送给所有目标, 如须过滤目标, 则须在渲染时过滤
- * @param {String} method 方法名称
- * @param {Object} params 请求参数
- * @param {Function} func 回调函数 可以为空
- * @param {String} token 临时访问牌, 用于指定客户端发消息
- */
-Drive.prototype.req = async function(method, params, func, token) {
-	if (token) {
-		var ctx = this.clients[token];
-		if (ctx) {
-			ctx.mqtt.req(params, func);
-		}
-	} else {
-		var dt = this.clients;
-		for (let k in dt) {
-			ctx.mqtt.req(params, func);
-		}
-	}
-};
-
-/**
- * 执行
- * @param {String} bodyStr 正文字符串
- * @param {Object} ctx 请求上下文
- * @param {String} token 临时访问牌
- * @return {Object} 返回执行结果
- */
-Drive.prototype.run = async function(bodyStr, ctx, token) {
-	try {
-		var ws = ctx.mqtt;
-		var json = bodyStr.toJson();
-		var req = ctx.request;
-		var request = Object.assign({}, {
-			headers: req.headers,
-			query: req.query,
-			token: token
-		});
-		if (json) {
-			var {
-				id,
-				method
-			} = json;
-			if (json.result && id) {
-				var lt = ws.list_msg;
-				var len = lt.length;
-				var has = false;
-				for (var i = 0; i < len; i++) {
-					var o = lt[i];
-					if (id === o.id) {
-						o.func(json.result);
-						lt.splice(i, 1);
-						has = true;
-						break;
-					}
-				}
-				if (has) {
-					return;
-				}
-			} else if (method) {
-				if (this.methods[method]) {
-					var ret;
-					var result = await this.methods[method](json.params, ws, request);
-					if (result) {
-						if (typeof(result) == "object" && !Array.isArray(result)) {
-							ret = Object.assign({
-								id
-							}, result);
-						} else {
-							ret = {};
-							if (id) {
-								ret.id = id
-							}
-							ret.result = result;
-						}
-					}
-					return ret;
-				}
-			}
-			return await this.main(json, ws, request);
-		}
-		return await this.main(bodyStr, ws, request);
-	} catch (err) {
-		$.log.error("webscoket 错误", err);
-		return $.log.error(10000, "代码错误！原因：" + err.toString());
-	}
-};
-
-/**
- * 非定义函数时执行
- * @param {Object} body 请求正文
- * @param {Object} params 参数
- * @param {Object} ws Webmqtt服务
- * @param {Object} request 请求协议头
- * @return {Object} 返回执行结果
- */
-Drive.prototype.main = async function(body, mqtt, request) {
+Drive.prototype.main = async function(topic, msg) {
 	return null;
 };
 

@@ -49,6 +49,7 @@ class MM_connector {
 				proxy: {}
 			},
 			mqtt: {
+				// 状态
 				state: true,
 				// mqtt访问端口号
 				socket_port: 1883,
@@ -58,6 +59,17 @@ class MM_connector {
 				cache: "mongodb",
 				// redis数据库
 				db: 12
+			},
+			mqtt_client: {
+				// 状态
+				state: true,
+				host: "127.0.0.1",
+				port: "8083",
+				protocol: "ws",
+				clientId: "system",
+				username: "admin",
+				password: "asd123",
+				clean: false
 			},
 			"redis": {
 				// 服务器地址
@@ -132,7 +144,10 @@ MM_connector.prototype.main = async function(state) {
 		this.mqtt.run();
 		tip += " mqtt";
 	}
-
+	
+	if(cg.mqtt_client && cg.mqtt_client.state){
+		
+	}
 	$.log.info(tip);
 };
 

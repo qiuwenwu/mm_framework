@@ -1,4 +1,4 @@
-const MQTT = require('./mm_mqtt');
+const MQTT = require('mm_mqtt');
 
 /**
  * 中间件

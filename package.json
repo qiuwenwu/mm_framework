@@ -1,6 +1,6 @@
 {
   "name": "mm_framework",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "description": "这是超级美眉服务端框架，用于快速构建应用。",
   "main": "index.js",
   "scripts": {
@@ -37,6 +37,7 @@
     "mm_koa_proxy": "^1.0.0",
     "mm_machine": "^1.5.3",
     "mm_mongodb": "^1.3.8",
+    "mm_mqtt": "^1.0.1",
     "mm_mysql": "^1.7.1",
     "mm_redis": "^1.3.9",
     "mm_ret": "^1.3.7",

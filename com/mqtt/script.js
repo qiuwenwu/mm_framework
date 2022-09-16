@@ -1,20 +1,11 @@
 /**
- * 主函数, 用于处理未定义函数的消息
- * @param {Object} params 参数
- * @param {Object} ws Websocket服务
- * @param {Object} request 请求协议头
+ * 主函数, 用于处理订阅内容
+ * @param {String} topic 订阅的主题
+ * @param {Object} msg 消息
  * @return {Object} 返回执行结果
  */
-exports.main = async function(body, ws, request) {
-	$.log.debug('收到客户端推送数据', body);
-};
-
-/**
- * 同步消息, 用于定时给前端推送数据
- * @param {Object} ws websocket通讯器
- */
-exports.sync = async function(ws) {
-	ws.send([]);
+exports.main = async function(topic, msg) {
+	$.log.debug('收到消息'topic, msg);
 };
 
 /**

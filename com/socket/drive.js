@@ -280,6 +280,9 @@ Drive.prototype.req = async function(method, params, func, token) {
  */
 Drive.prototype.run = async function(bodyStr, ctx, token) {
 	try {
+		if(Object.prototype.toString.call(bodyStr) == "[object Uint8Array]"){
+			bodyStr = bodyStr.toString();
+		}
 		var ws = ctx.websocket;
 		var json = bodyStr.toJson();
 		var req = ctx.request;

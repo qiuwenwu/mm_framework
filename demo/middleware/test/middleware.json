@@ -1,0 +1,8 @@
+{
+	"mode": "web",
+	"name": "test插件",
+	"title": "示例中间件",
+	"description": "描述该中间件的作用",
+	"version": "1.0",
+	"sort": 3
+}

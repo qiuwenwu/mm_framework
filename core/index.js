@@ -2,11 +2,10 @@ var WEB = require("./web");
 var MQTT = require("./mqtt");
 
 module.exports = function(cg) {
-	var middleware = new $.Middleware({
-		path: "/middleware/".fullname()
-	});
+	var middleware = new $.Middleware();
 	middleware.init();
-	var mqtt,web;
+	// console.log(middleware)
+	var mqtt, web;
 	if (cg.web && cg.web.state) {
 		web = new WEB(cg.web);
 		web.list = middleware.list.filter((o) => {
@@ -25,6 +24,7 @@ module.exports = function(cg) {
 		mqtt.init();
 	}
 	return {
-		mqtt, web
+		mqtt,
+		web
 	}
 }

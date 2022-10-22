@@ -13,5 +13,7 @@ os.init().run().then((res) => {
 
 os.web.server.use(async(ctx, next) => {
 	await next();
-	ctx.body = "hello world!";
+	if(!ctx.body){
+		ctx.body = "hello world!";
+	}
 });

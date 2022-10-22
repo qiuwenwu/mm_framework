@@ -89,10 +89,9 @@ Middleware.prototype.load = function(file) {
  */
 Middleware.prototype.each_load = function(path) {
 	if (path.hasDir()) {
-		var dirs = $.dir.getAll(path);
+		var dirs = $.dir.getAll(path);	
 		// 遍历目录路径
 		var file = this.config.file;
-		dirs.splice(0,1);
 		dirs.map((d) => {
 			this.load(d + file);
 		});
@@ -110,8 +109,15 @@ Middleware.prototype.sort = function() {
  * 遍历加载配置
  */
 Middleware.prototype.init = function(path) {
-	this.each_load(path || (__dirname + "../../../middleware/").fullname());
+	this.each_load("../../middleware/".fullname(__dirname));
+	if (path) {
+		this.each_load(path);
+	}
 	this.each_load(this.config.path);
+	var p = "./middleware".fullname($.runPath);
+	if (this.config.path !== p) {
+		this.each_load(p);
+	}
 	this.sort();
 };
 

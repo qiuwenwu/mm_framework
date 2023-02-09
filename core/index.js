@@ -16,7 +16,7 @@ module.exports = function(cg) {
 	if (cg.mqtt && cg.mqtt.state) {
 		mqtt = new MQTT(Object.assign(cg.mqtt, {
 			redis: cg.redis,
-			mongodb: cg.mongodb
+			// mongodb: cg.mongodb
 		}));
 		mqtt.list = middleware.list.filter((o) => {
 			return o.mode == "mqtt"

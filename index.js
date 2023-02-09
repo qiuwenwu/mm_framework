@@ -56,7 +56,8 @@ class MM_connector {
 				// websocket 访问端口
 				http_port: 8083,
 				// 缓存方式
-				cache: "mongodb",
+				// cache: "redis", mongo
+				cache: "redis",
 				// redis数据库
 				db: 12
 			},

@@ -20,16 +20,25 @@ class MQTT {
 			// websocket 访问端口
 			"http_port": 8083,
 			// 缓存方式
-			"cache": "mongodb",
-			redis: {},
-			mongodb: {}
+			"cache": "mongodb", // "mongodb",
+			redis: {
+				host: "localhost",
+				port: 6379,
+				password: "asd159357",
+				db: 12
+			},
+			mongodb: {
+				host: "localhost",
+				port: 27017,
+				database: "mqtt"
+			}
 		}, config);
 
 		/**
 		 * MQTT服务器
 		 */
 		this.server = null;
-		
+
 		this.list = [];
 	}
 }
@@ -43,42 +52,69 @@ MQTT.prototype.init = function(config) {
 		this.config = Object.assign(this.config, config);
 	}
 	var cg = Object.assign({}, this.config);
-	var {redis, mongodb} = cg;
+	var {
+		redis,
+		mongodb
+	} = cg;
 	var conf = {
 		port: cg.socket_port,
 		http: {
-			port: cg.http_port
+			port: cg.http_port,
+			bundle: true,
+			static: './'
 		}
 	}
 	if (cg.cache === 'redis') {
 		if (cg.redis) {
 			conf.backend = {
+				type: "redis",
 				redis: require('redis'),
 				host: redis.host || "localhost",
 				port: redis.port || 6379,
+				password: redis.password,
 				db: redis.db || 12,
 				return_buffers: true
 			}
 		} else {
 			conf.backend = {
+				type: "redis",
 				redis: require('redis'),
 				host: "localhost",
+				password: "asd159357",
 				port: 6379,
 				db: 12,
 				return_buffers: true
 			}
 		}
-	} else if(cg.cache === 'mongodb' || cg.cache === 'mongo') {
-		// conf.backend = {
-		// 	url: `mongodb://${mongodb.host}:${mongodb.port}/mqtt`,
-		// };
-		// conf.backend = {
-		// 	// 增加了此项
-		// 	type: 'mongo',
-		// 	url: `mongodb://${mongodb.host}:${mongodb.port}/mqtt`,
-		// 	pubsubCollection: 'ascoltatori',
-		// 	factory: cg.cache == "mongodb" ? mosca.persistence.Mongo : mosca.persistence.Redis
-		// }
+		// 数据持久化参数设置
+		conf.persistence = Object.assign({
+			factory: mosca.persistence.Redis,
+			ttl: {
+				// TTL for subscriptions is 23 hour 
+				subscriptions: 23 * 60 * 60 * 1000,
+				// TTL for packets is 23 hour 
+				packets: 23 * 60 * 60 * 1000,
+			}
+		}, conf.backend);
+	} else if (cg.cache === 'mongodb' || cg.cache === 'mongo') {
+		conf.backend = {
+			// 增加了此项
+			type: 'mongo',
+			url: `mongodb://${mongodb.host}:${mongodb.port}/mqtt`,
+			pubsubCollection: 'ascoltatori',
+			mongo: {}
+		}
+
+		// 数据持久化参数设置
+		conf.persistence = Object.assign({
+			factory: mosca.persistence.Mongo,
+			ttl: {
+				// TTL for subscriptions is 23 hour 
+				subscriptions: 23 * 60 * 60 * 1000,
+				// TTL for packets is 23 hour 
+				packets: 23 * 60 * 60 * 1000,
+			}
+		}, conf.backend);
 	}
 	this.server = new mosca.Server(conf);
 	return this;

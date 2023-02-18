@@ -30,6 +30,8 @@ class MQTT {
 				db: 12
 			},
 			mongodb: {
+				user: "",
+				password: "",
 				host: "localhost",
 				port: 27017,
 				database: "mqtt"
@@ -100,10 +102,15 @@ MQTT.prototype.init = function(config) {
 			}
 		}, conf.backend);
 	} else if (cg.cache === 'mongodb' || cg.cache === 'mongo') {
+		var url = `mongodb://${mongodb.host}:${mongodb.port}/mqtt`;
+		if (mongodb.user) {
+			url = `mongodb://${mongodb.user}:${mongodb.password}@${mongodb.host}:${mongodb.port}/mqtt`
+		}
+		console.log("url", url);
 		conf.backend = {
 			// 增加了此项
 			type: 'mongo',
-			url: `mongodb://${mongodb.host}:${mongodb.port}/mqtt`,
+			url,
 			pubsubCollection: 'ascoltatori',
 			mongo: {}
 		}

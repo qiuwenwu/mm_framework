@@ -86,7 +86,7 @@ class MM_connector {
 			},
 			"mongodb": {
 				// 服务器地址
-				"host": "localhost",
+				"host": "127.0.0.1",
 				// 端口号
 				"port": 27017,
 				// 数据库名
@@ -94,7 +94,7 @@ class MM_connector {
 				// 用户名
 				"user": "admin",
 				// 密码 无则代表连接不需要账号密码
-				"password": ""
+				"password": "asd123"
 			}
 		}, config);
 

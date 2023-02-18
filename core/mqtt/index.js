@@ -17,6 +17,8 @@ class MQTT {
 			"state": true,
 			// mqtt访问端口号
 			"socket_port": 1883,
+			// 服务端
+			"http_host": "localhost",
 			// websocket 访问端口
 			"http_port": 8083,
 			// 缓存方式
@@ -59,6 +61,7 @@ MQTT.prototype.init = function(config) {
 	var conf = {
 		port: cg.socket_port,
 		http: {
+			host: cg.http_host || "localhost",
 			port: cg.http_port,
 			bundle: true,
 			static: './'

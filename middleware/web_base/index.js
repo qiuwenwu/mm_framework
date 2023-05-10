@@ -45,6 +45,7 @@ module.exports = function(server, config) {
 	server.use(xmlParser());
 	
 	var func = koaBody({
+		jsonLimit: config.jsonLimit || '20mb',
 		multipart: true,
 		formidable: {
 			// 设置上传文件大小最大限制，默认20M

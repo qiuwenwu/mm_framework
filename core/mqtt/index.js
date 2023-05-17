@@ -102,11 +102,11 @@ MQTT.prototype.init = function(config) {
 			}
 		}, conf.backend);
 	} else if (cg.cache === 'mongodb' || cg.cache === 'mongo') {
-		var url = `mongodb://${mongodb.host}:${mongodb.port}/mqtt`;
+		var url = `mongodb://${mongodb.host}:${mongodb.port}/${mongodb.database}`;
 		if (mongodb.user) {
-			url = `mongodb://${mongodb.user}:${mongodb.password}@${mongodb.host}:${mongodb.port}/mqtt`
+			url =
+				`mongodb://${mongodb.user}:${mongodb.password}@${mongodb.host}:${mongodb.port}/${mongodb.database}`
 		}
-		console.log("url", url);
 		conf.backend = {
 			// 增加了此项
 			type: 'mongo',
@@ -152,7 +152,8 @@ MQTT.prototype.main = function(state) {
 	 */
 	sr.on('clientConnected', function(client) {
 		//监听连接
-		console.log('client connected', client.id);
+		$.log.info('client connected', client.id);
+		return true;
 	});
 
 	var _this = this;
@@ -187,7 +188,9 @@ MQTT.prototype.main = function(state) {
 	 * 身份验证
 	 */
 	sr.authenticate = (client, username, password, callback) => {
+		$.log.info("收到身份验证", username, password);
 		this.auth(client, username, password, callback);
+		return true;
 	};
 
 	/**

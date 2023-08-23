@@ -2,7 +2,7 @@ const Index = require('mm_machine').Index;
 const Drive = require('./drive');
 
 /**
- * App插件类
+ * App应用类
  * @extends {Index}
  * @class 
  */
@@ -42,7 +42,7 @@ App.prototype.run = function(param1, param2) {
 };
 
 /**
- * 聊天（通过聊天的方式驱动插件, 用于机器人开发）
+ * 聊天（通过聊天的方式驱动应用, 用于机器人开发）
  * @param {String} from_user 发送消息人
  * @param {String} to_user 接收消息人
  * @param {String} content 内容
@@ -67,8 +67,8 @@ App.prototype.chat = async function(from_user, to_user, group, content, type, ms
 };
 
 /**
- * 执行插件方法
- * @param {String} name 插件名称
+ * 执行应用方法
+ * @param {String} name 应用名称
  * @param {String} method 方法名称
  * @param {Object} option 配置参数
  * @return {String} 执行结果
@@ -90,7 +90,7 @@ App.prototype.exec = function(name, method, option) {
 };
 
 /**
- * 初始化插件
+ * 初始化应用
  * @param {Object} option 配置参数
  * @return {String} 执行结果
  */
@@ -108,7 +108,7 @@ App.prototype.sort = function() {
 };
 
 /**
- * 加载插件
+ * 加载应用
  * @param {String} path 检索路径
  * @param {Boolean} isApp 是否APP
  */
@@ -144,7 +144,7 @@ if (!$.pool.app) {
 }
 
 /**
- * app管理器, 用于管理插件
+ * app管理器, 用于管理应用
  * @param {string} scope 作用域
  * @param {string} title 标题
  * @return {Object} 返回一个缓存类

@@ -48,6 +48,16 @@ class MQTT {
 }
 
 /**
+ * 客户端连接成功
+ * @param {Object} client 客户端信息
+ */
+MQTT.prototype.connected = async function(client) {
+	//监听连接
+	console.info('client connected', client.id);
+	return true;
+}
+
+/**
  * 初始化
  * @param {Object} config
  */
@@ -146,17 +156,16 @@ MQTT.prototype.main = function(state) {
 	var cg = this.config;
 	sr = this.server;
 
+	var _this = this;
+
 	/**
 	 * 对服务器端口进行配置，在此端口进行监听
 	 * @param {Object} client 客户端信息
 	 */
-	sr.on('clientConnected', function(client) {
-		//监听连接
-		$.log.info('client connected', client.id);
-		return true;
+	sr.on('clientConnected', async function(client) {
+		return await _this.connected(client);
 	});
-
-	var _this = this;
+	
 	/**
 	 * 监听MQTT主题消息
 	 * @param {Object} packet 订阅消息
